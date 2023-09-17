@@ -8,12 +8,17 @@ local bufnr = nil
 --- @type number?
 local winnr = nil
 
+--- Close the current arena window
+local function close()
+  vim.api.nvim_win_close(winnr, true)
+  winnr = nil
+  bufnr = nil
+end
+
 function M.toggle()
   -- Close window if it already exists
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    vim.api.nvim_win_close(winnr, true)
-    winnr = nil
-    bufnr = nil
+    close()
     return
   end
 
@@ -66,9 +71,7 @@ function M.toggle()
     buffer = bufnr,
     nested = true,
     once = true,
-    callback = function()
-      vim.api.nvim_win_close(winnr, true)
-    end,
+    callback = close,
   })
 
   local function opener(open_fn)
@@ -84,6 +87,7 @@ function M.toggle()
   end
 
   -- Keymaps
+  vim.keymap.set("n", "q", close, { buffer = bufnr })
   vim.keymap.set(
     "n",
     "<CR>",
@@ -92,9 +96,6 @@ function M.toggle()
     end),
     { buffer = bufnr }
   )
-  vim.keymap.set("n", "q", function()
-    vim.api.nvim_win_close(winnr, true)
-  end, { buffer = bufnr })
   vim.keymap.set(
     "n",
     "<C-v>",
