@@ -4,10 +4,16 @@ local M = {}
 --- this function will truncate the paths (in-place) to
 --- { "test/mod.rs", "more/mod.rs" }.
 --- @param paths string[]
-function M.truncate_paths(paths)
+function M.truncate_paths(paths, always_context)
+  always_context = always_context or {}
+
   local components = {}
   for _, path in ipairs(paths) do
     local basename = vim.fs.basename(path)
+    components[basename] = (components[basename] or 0) + 1
+  end
+
+  for _, basename in ipairs(always_context) do
     components[basename] = (components[basename] or 0) + 1
   end
 

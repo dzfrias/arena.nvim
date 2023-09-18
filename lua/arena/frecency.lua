@@ -4,7 +4,8 @@ local M = {}
 local usages = {}
 -- Default config values
 local config = {
-  recency_dampen = 0.5,
+  --- Multiply the recency by a factor. Must be greater than zero.
+  recency_factor = 0.5,
 }
 
 --- Get the current frecency config.
@@ -18,6 +19,11 @@ end
 function M.tune(opts)
   opts = opts or {}
   config = vim.tbl_deep_extend("force", config, opts)
+
+  if config.recency_factor < 0 then
+    config.recency_factor = 0
+    error("recency_factor cannot be less than 0!")
+  end
 end
 
 --- Update an item for the frecency algorithm.
@@ -49,7 +55,7 @@ function M.calc_frecency(item)
 
   local recency_factor = 1 / (os.time() - data.last_used + 1)
   local frequency_factor = data.count
-  recency_factor = recency_factor * (1 - config.recency_dampen)
+  recency_factor = recency_factor * (1 - config.recency_factor)
 
   local frecency = recency_factor * frequency_factor
 

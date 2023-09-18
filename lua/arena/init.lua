@@ -5,7 +5,10 @@ local M = {}
 
 -- Default config
 local config = {
+  --- Maxiumum items that the arena window can contain.
   max_items = 5,
+  --- Always add context to these paths.
+  always_context = { "mod.rs", "init.lua" },
 
   window = {
     width = 60,
@@ -13,7 +16,7 @@ local config = {
     border = "rounded",
   },
 
-  -- Default config for frecency algorithm
+  --- Config for frecency algorithm.
   algorithm = frecency.get_config(),
 }
 
@@ -48,7 +51,7 @@ function M.toggle()
     table.insert(contents, item.name)
   end
   -- Truncate paths, prettier output
-  util.truncate_paths(contents)
+  util.truncate_paths(contents, config.always_context)
 
   bufnr = vim.api.nvim_create_buf(false, false)
   winnr = vim.api.nvim_open_win(bufnr, false, {
