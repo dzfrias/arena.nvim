@@ -2,6 +2,23 @@ local M = {}
 
 --- @type table<string, { count: number, last_used: number, meta: table }>
 local usages = {}
+-- Default config values
+local config = {
+  recency_dampen = 0.5,
+}
+
+--- Get the current frecency config.
+--- @return table
+function M.get_config()
+  return config
+end
+
+--- Configure the frecency algorithm.
+--- @param opts table
+function M.tune(opts)
+  opts = opts or {}
+  config = vim.tbl_deep_extend("force", config, opts)
+end
 
 --- Update an item for the frecency algorithm.
 --- @param item string
@@ -30,10 +47,9 @@ function M.calc_frecency(item)
     return 0
   end
 
-  local RECENCY_DAMPEN = 0.2
   local recency_factor = 1 / (os.time() - data.last_used + 1)
   local frequency_factor = data.count
-  recency_factor = recency_factor * (1 - RECENCY_DAMPEN)
+  recency_factor = recency_factor * (1 - config.recency_dampen)
 
   local frecency = recency_factor * frequency_factor
 
@@ -42,8 +58,9 @@ end
 
 --- Get the most frecent items, in descending order.
 --- @param filter (fun(name: string, data: table): boolean)?
+--- @param n number?
 --- @return table<{ name: string, score: number, meta: table }>
-function M.top_items(filter)
+function M.top_items(filter, n)
   local frecencies = {}
   local i = 1
   for name, data in pairs(usages) do
@@ -51,13 +68,22 @@ function M.top_items(filter)
       goto continue
     end
     local score = M.calc_frecency(name)
-    frecencies[i] = { name = name, score = score, meta = data.meta }
+    table.insert(frecencies, { name = name, score = score, meta = data.meta })
     i = i + 1
     ::continue::
   end
   table.sort(frecencies, function(a, b)
     return a.score > b.score
   end)
+
+  if n then
+    local new = {}
+    for j = 1, n do
+      new[j] = frecencies[j]
+    end
+    return new
+  end
+
   return frecencies
 end
 

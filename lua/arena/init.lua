@@ -3,6 +3,20 @@ local util = require("arena.util")
 
 local M = {}
 
+-- Default config
+local config = {
+  max_items = 5,
+
+  window = {
+    width = 60,
+    height = 10,
+    border = "rounded",
+  },
+
+  -- Default config for frecency algorithm
+  algorithm = frecency.get_config(),
+}
+
 --- @type number?
 local bufnr = nil
 --- @type number?
@@ -22,9 +36,9 @@ function M.toggle()
     return
   end
 
-  local items = frecency.top_items(function(_, data)
-    return vim.api.nvim_buf_is_loaded(data.buf)
-  end)
+  local items = frecency.top_items(function(name, data)
+    return vim.api.nvim_buf_is_loaded(data.buf) and vim.fn.filereadable(name)
+  end, config.max_items)
   local buffers = {}
   for _, item in ipairs(items) do
     table.insert(buffers, item.meta.buf)
@@ -36,19 +50,16 @@ function M.toggle()
   -- Truncate paths, prettier output
   util.truncate_paths(contents)
 
-  local WIDTH = 60
-  local HEIGHT = 10
-
   bufnr = vim.api.nvim_create_buf(false, false)
   winnr = vim.api.nvim_open_win(bufnr, false, {
     relative = "editor",
-    row = ((vim.o.lines - HEIGHT) / 2) - 1,
-    col = (vim.o.columns - WIDTH) / 2,
-    width = WIDTH,
-    height = HEIGHT,
+    row = ((vim.o.lines - config.window.height) / 2) - 1,
+    col = (vim.o.columns - config.window.width) / 2,
+    width = config.window.width,
+    height = config.window.height,
     title = "Arena",
     title_pos = "center",
-    border = "rounded",
+    border = config.window.border,
   })
 
   -- Options
@@ -120,20 +131,35 @@ function M.toggle()
     end),
     { buffer = bufnr }
   )
+  vim.keymap.set(
+    "n",
+    "<C-t>",
+    opener(function(buf)
+      vim.cmd({
+        cmd = "tabnew",
+        args = { vim.fn.bufname(buf) },
+      })
+    end),
+    { buffer = bufnr }
+  )
 
   vim.api.nvim_set_current_win(winnr)
 end
 
-local group = vim.api.nvim_create_augroup("arena", {})
-function M.setup()
-  vim.api.nvim_create_autocmd("BufWinEnter", {
-    group = group,
-    callback = function(data)
-      if data.file ~= "" and vim.o.buftype == "" then
-        frecency.update_item(data.file, { buf = data.buf })
-      end
-    end,
-  })
+function M.setup(opts)
+  opts = opts or {}
+  config = vim.tbl_deep_extend("force", config, opts)
+  frecency.tune(config.algorithm)
 end
+
+local group = vim.api.nvim_create_augroup("arena", { clear = true })
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = group,
+  callback = function(data)
+    if data.file ~= "" and vim.o.buftype == "" then
+      frecency.update_item(data.file, { buf = data.buf })
+    end
+  end,
+})
 
 return M
