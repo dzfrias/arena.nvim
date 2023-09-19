@@ -3,6 +3,34 @@ local util = require("arena.util")
 
 local M = {}
 
+--- @type number?
+local bufnr = nil
+--- @type number?
+local winnr = nil
+--- @type table<number>?
+local buffers = nil
+
+--- Close the current arena window
+function M.close()
+  vim.api.nvim_win_close(winnr, true)
+  winnr = nil
+  bufnr = nil
+  buffers = nil
+end
+
+--- Wraps a function that switches to a buffer in the arena window.
+function M.opener(open_fn)
+  return function()
+    if not buffers or #buffers == 0 then
+      return
+    end
+    local idx = vim.fn.line(".")
+    local info = vim.fn.getbufinfo(buffers[idx])[1]
+    open_fn(buffers[idx])
+    vim.fn.cursor(info.lnum, 0)
+  end
+end
+
 -- Default config
 local config = {
   --- Maxiumum items that the arena window can contain.
@@ -16,33 +44,44 @@ local config = {
     border = "rounded",
   },
 
+  --- Keybinds for the arena window.
+  --- @type { string: (function | string)? }
+  keybinds = {
+    ["<C-x>"] = M.opener(function(buf)
+      vim.cmd({
+        cmd = "split",
+        args = { vim.fn.bufname(buf) },
+        mods = { horizontal = true },
+      })
+    end),
+    ["<C-v>"] = M.opener(function(buf)
+      vim.cmd({
+        cmd = "split",
+        args = { vim.fn.bufname(buf) },
+        mods = { vertical = true },
+      })
+    end),
+    ["<C-t>"] = M.opener(function(buf)
+      vim.cmd({
+        cmd = "tabnew",
+        args = { vim.fn.bufname(buf) },
+      })
+    end),
+    ["<CR>"] = M.opener(function(buf)
+      vim.api.nvim_set_current_buf(buf)
+    end),
+    ["q"] = M.close,
+  },
+
   --- Config for frecency algorithm.
   algorithm = frecency.get_config(),
 }
 
---- @type number?
-local bufnr = nil
---- @type number?
-local winnr = nil
-
---- Close the current arena window
-local function close()
-  vim.api.nvim_win_close(winnr, true)
-  winnr = nil
-  bufnr = nil
-end
-
-function M.toggle()
-  -- Close window if it already exists
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    close()
-    return
-  end
-
+function M.open()
   local items = frecency.top_items(function(name, data)
     return vim.api.nvim_buf_is_loaded(data.buf) and vim.fn.filereadable(name)
   end, config.max_items)
-  local buffers = {}
+  buffers = {}
   for _, item in ipairs(items) do
     table.insert(buffers, item.meta.buf)
   end
@@ -85,70 +124,32 @@ function M.toggle()
     buffer = bufnr,
     nested = true,
     once = true,
-    callback = close,
+    callback = M.close,
   })
 
-  local function opener(open_fn)
-    return function()
-      if #buffers == 0 then
-        return
-      end
-      local idx = vim.fn.line(".")
-      local info = vim.fn.getbufinfo(buffers[idx])[1]
-      open_fn(buffers[idx])
-      vim.fn.cursor(info.lnum, 0)
-    end
-  end
-
   -- Keymaps
-  vim.keymap.set("n", "q", close, { buffer = bufnr })
-  vim.keymap.set(
-    "n",
-    "<CR>",
-    opener(function(buf)
-      vim.api.nvim_set_current_buf(buf)
-    end),
-    { buffer = bufnr }
-  )
-  vim.keymap.set(
-    "n",
-    "<C-v>",
-    opener(function(buf)
-      vim.cmd({
-        cmd = "split",
-        args = { vim.fn.bufname(buf) },
-        mods = { vertical = true },
-      })
-    end),
-    { buffer = bufnr }
-  )
-  vim.keymap.set(
-    "n",
-    "<C-x>",
-    opener(function(buf)
-      vim.cmd({
-        cmd = "split",
-        args = { vim.fn.bufname(buf) },
-        mods = { horizontal = true },
-      })
-    end),
-    { buffer = bufnr }
-  )
-  vim.keymap.set(
-    "n",
-    "<C-t>",
-    opener(function(buf)
-      vim.cmd({
-        cmd = "tabnew",
-        args = { vim.fn.bufname(buf) },
-      })
-    end),
-    { buffer = bufnr }
-  )
+  for key, fn in pairs(config.keybinds) do
+    if not key then
+      goto continue
+    end
+    vim.keymap.set("n", key, fn, { buffer = bufnr })
+    ::continue::
+  end
 
   vim.api.nvim_set_current_win(winnr)
 end
 
+--- Toggle the arena window
+function M.toggle()
+  -- Close window if it already exists
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    M.close()
+    return
+  end
+  M.open()
+end
+
+--- Set up the config
 function M.setup(opts)
   opts = opts or {}
   config = vim.tbl_deep_extend("force", config, opts)
