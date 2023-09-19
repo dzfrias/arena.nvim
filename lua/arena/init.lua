@@ -40,11 +40,18 @@ local config = {
   always_context = { "mod.rs", "init.lua" },
   --- When activated, ignores the current buffer when listing in the arena.
   ignore_current = false,
+  --- Options to apply to the arena buffer
+  --- @type table<string, any>
+  buf_opts = {},
 
   window = {
     width = 60,
     height = 10,
     border = "rounded",
+
+    --- Options to apply to the arena window
+    --- @type table<string, any>
+    opts = {},
   },
 
   --- Keybinds for the arena window.
@@ -115,14 +122,23 @@ function M.open()
     border = config.window.border,
   })
 
-  -- Options
+  vim.api.nvim_buf_set_lines(bufnr, 0, #contents, false, contents)
+
+  -- Buffer options
   vim.api.nvim_buf_set_option(bufnr, "filetype", "arena")
   vim.api.nvim_buf_set_name(bufnr, "arena")
-  vim.api.nvim_buf_set_option(bufnr, "bufhidden", "delete")
-  vim.api.nvim_buf_set_lines(bufnr, 0, #contents, false, contents)
   vim.api.nvim_buf_set_option(bufnr, "readonly", true)
+  vim.api.nvim_buf_set_option(bufnr, "bufhidden", "delete")
   vim.api.nvim_buf_set_option(bufnr, "buftype", "acwrite")
   vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+  for option, value in pairs(config.buf_opts) do
+    vim.api.nvim_buf_set_option(bufnr, option, value)
+  end
+
+  -- Window options
+  for option, value in pairs(config.window.opts) do
+    vim.api.nvim_win_set_option(bufnr, option, value)
+  end
 
   -- Autocommands
   vim.api.nvim_create_autocmd("BufModifiedSet", {
