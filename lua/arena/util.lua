@@ -4,8 +4,11 @@ local M = {}
 --- this function will truncate the paths (in-place) to
 --- { "test/mod.rs", "more/mod.rs" }.
 --- @param paths string[]
-function M.truncate_paths(paths, always_context)
-  always_context = always_context or {}
+--- @param opts { always_context: string[] }
+function M.truncate_paths(paths, opts)
+  opts = opts or {
+    always_context = {},
+  }
 
   local components = {}
   for _, path in ipairs(paths) do
@@ -13,7 +16,7 @@ function M.truncate_paths(paths, always_context)
     components[basename] = (components[basename] or 0) + 1
   end
 
-  for _, basename in ipairs(always_context) do
+  for _, basename in ipairs(opts.always_context) do
     components[basename] = (components[basename] or 0) + 1
   end
 

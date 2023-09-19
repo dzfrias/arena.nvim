@@ -7,7 +7,7 @@ local M = {}
 local bufnr = nil
 --- @type number?
 local winnr = nil
---- @type table<number>?
+--- @type number[]?
 local buffers = nil
 
 --- Close the current arena window
@@ -36,7 +36,10 @@ local config = {
   --- Maxiumum items that the arena window can contain.
   max_items = 5,
   --- Always add context to these paths.
+  --- @type string[]
   always_context = { "mod.rs", "init.lua" },
+  --- When activated, ignores the current buffer when listing in the arena.
+  ignore_current = false,
 
   window = {
     width = 60,
@@ -78,8 +81,16 @@ local config = {
 }
 
 function M.open()
-  local items = frecency.top_items(function(name, data)
-    return vim.api.nvim_buf_is_loaded(data.buf) and vim.fn.filereadable(name)
+  local items = frecency.top_items(function(_, data)
+    if config.ignore_current and data.buf == vim.api.nvim_get_current_buf() then
+      return false
+    end
+
+    if vim.fn.buflisted(data.buf) ~= 1 then
+      return false
+    end
+
+    return vim.api.nvim_buf_is_loaded(data.buf)
   end, config.max_items)
   buffers = {}
   for _, item in ipairs(items) do
@@ -90,7 +101,7 @@ function M.open()
     table.insert(contents, item.name)
   end
   -- Truncate paths, prettier output
-  util.truncate_paths(contents, config.always_context)
+  util.truncate_paths(contents, { always_context = config.always_context })
 
   bufnr = vim.api.nvim_create_buf(false, false)
   winnr = vim.api.nvim_open_win(bufnr, false, {
