@@ -18,7 +18,12 @@ function M.close()
   buffers = nil
 end
 
---- Wraps a function that switches to a buffer in the arena window.
+--- Wrap a function that switches to a buffer in the arena window.
+---
+--- The function takes in a buffer number, which represents the current buffer
+--- that will be switched to. It may also return `false`, to cancel the opening.
+---
+--- @param open_fn fun(buf: number): boolean?
 function M.opener(open_fn)
   return function()
     if not buffers or #buffers == 0 then
@@ -26,7 +31,9 @@ function M.opener(open_fn)
     end
     local idx = vim.fn.line(".")
     local info = vim.fn.getbufinfo(buffers[idx])[1]
-    open_fn(buffers[idx])
+    if open_fn(buffers[idx]) == false then
+      return
+    end
     vim.fn.cursor(info.lnum, 0)
   end
 end
@@ -55,7 +62,7 @@ local config = {
   },
 
   --- Keybinds for the arena window.
-  --- @type { string: (function | string)? }
+  --- @type table<string, (function | string)?>
   keybinds = {
     ["<C-x>"] = M.opener(function(buf)
       vim.cmd({
@@ -177,6 +184,7 @@ function M.toggle()
 end
 
 --- Set up the config
+--- @param opts table?
 function M.setup(opts)
   opts = opts or {}
   config = vim.tbl_deep_extend("force", config, opts)
