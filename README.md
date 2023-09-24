@@ -9,7 +9,10 @@ files as fast as you can think! If you're tired of:
 
 then the arena the perfect solution!
 
-TODO: image
+
+<img width="987" alt="The arena window" src="https://github.com/dzfrias/arena.nvim/assets/96022404/625c0b11-81c5-4336-bc82-84b2247ebc2b">
+<sub>The arena window. You can jump to your most frecent files!</sub>
+
 
 ## Getting Started
 
