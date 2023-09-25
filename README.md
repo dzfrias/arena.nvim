@@ -18,11 +18,13 @@ TODO
 
 ## Configuration
 
-`arena.nvim` has plenty of configuration options to suit your needs!
+`arena.nvim` has plenty of configuration options to suit your needs! Below are
+all the configuration options along with their default values.
 
 ```lua
 {
-  -- Maxiumum number of files that the arena window can contain.
+  -- Maxiumum number of files that the arena window can contain, or `nil` for
+  -- an unlimited amount
   max_items = 5,
   -- Always show the enclosing folder for these paths
   always_context = { "mod.rs", "init.lua" },
@@ -30,7 +32,10 @@ TODO
   ignore_current = false,
   -- Options to apply to the arena buffer.
   -- Format should be `["<OPTION>"] = <VALUE>`
-  buf_opts = {},
+  buf_opts = {
+    -- Example. Uncomment to add to your config!
+    -- ["relativenumber"] = false,
+  },
 
   window = {
     width = 60,
@@ -41,7 +46,7 @@ TODO
     opts = {},
   },
 
-  -- Keybinds for the arena window. Format should be
+  -- Keybinds for the arena window.
   keybinds = {
       -- Example. Uncomment to add to your config!
       -- ["e"] = function()
@@ -86,21 +91,24 @@ Closes the arena window, if it exists.
 require("arena").close()
 ```
 
-### Opener
+### Action
 
 Useful in the `keybinds` key of [the config](#configuration). Wraps a function
-that should open the currently selected file in the arena window.
+that should do something with the currently selected file in the arena window.
 
-The function may also return `false` to cancel opening the file.
+The function is passed a number, which represents the buffer number of the
+currently selected file. It can also accept a second argument, which is
+the output of `getbufinfo()`.
 
 ```lua
 -- Equivalent to the <C-v> keybind in the arena window
-require("arena").opener(function(bufnr)
+require("arena").action(function(bufnr, info)
   vim.cmd({
     cmd = "split",
     args = { vim.fn.bufname(bufnr) },
     mods = { vertical = true },
   })
+  vim.fn.cursor(info.lnum, 0)
 end)
 ```
 

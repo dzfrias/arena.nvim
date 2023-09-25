@@ -23,18 +23,15 @@ end
 --- The function takes in a buffer number, which represents the current buffer
 --- that will be switched to. It may also return `false`, to cancel the opening.
 ---
---- @param open_fn fun(buf: number): boolean?
-function M.opener(open_fn)
+--- @param fn fun(buf: number, info: table?)
+function M.action(fn)
   return function()
     if not buffers or #buffers == 0 then
       return
     end
     local idx = vim.fn.line(".")
     local info = vim.fn.getbufinfo(buffers[idx])[1]
-    if open_fn(buffers[idx]) == false then
-      return
-    end
-    vim.fn.cursor(info.lnum, 0)
+    fn(buffers[idx], info)
   end
 end
 
@@ -64,28 +61,32 @@ local config = {
   --- Keybinds for the arena window.
   --- @type table<string, (function | string)?>
   keybinds = {
-    ["<C-x>"] = M.opener(function(buf)
+    ["<C-x>"] = M.action(function(buf, info)
       vim.cmd({
         cmd = "split",
         args = { vim.fn.bufname(buf) },
         mods = { horizontal = true },
       })
+      vim.fn.cursor(info.lnum, 0)
     end),
-    ["<C-v>"] = M.opener(function(buf)
+    ["<C-v>"] = M.action(function(buf, info)
       vim.cmd({
         cmd = "split",
         args = { vim.fn.bufname(buf) },
         mods = { vertical = true },
       })
+      vim.fn.cursor(info.lnum, 0)
     end),
-    ["<C-t>"] = M.opener(function(buf)
+    ["<C-t>"] = M.action(function(buf, info)
       vim.cmd({
         cmd = "tabnew",
         args = { vim.fn.bufname(buf) },
       })
+      vim.fn.cursor(info.lnum, 0)
     end),
-    ["<CR>"] = M.opener(function(buf)
+    ["<CR>"] = M.action(function(buf, info)
       vim.api.nvim_set_current_buf(buf)
+      vim.fn.cursor(info.lnum, 0)
     end),
     ["q"] = M.close,
   },
