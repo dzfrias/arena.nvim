@@ -6,6 +6,8 @@ local usages = {}
 local config = {
   --- Multiply the recency by a factor. Must be greater than zero.
   recency_factor = 0.5,
+  --- Multiply the frequency by a factor. Must be greater than zero.
+  frequency_factor = 1,
 }
 
 --- Get the current frecency config.
@@ -23,6 +25,11 @@ function M.tune(opts)
   if config.recency_factor < 0 then
     config.recency_factor = 0
     error("recency_factor cannot be less than 0!")
+  end
+
+  if config.frequency_factor < 0 then
+    config.frequency_factor = 0
+    error("frequency_factor cannot be less than 0!")
   end
 end
 
@@ -54,8 +61,8 @@ function M.calc_frecency(item)
   end
 
   local recency_factor = 1 / (os.time() - data.last_used + 1)
-  local frequency_factor = data.count
-  recency_factor = recency_factor * (1 - config.recency_factor)
+  local frequency_factor = data.count * config.frequency_factor
+  recency_factor = recency_factor * config.recency_factor
 
   local frecency = recency_factor * frequency_factor
 

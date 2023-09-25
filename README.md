@@ -59,6 +59,8 @@ all the configuration options along with their default values.
     -- Multiplies the recency by a factor. Must be greater than zero.
     -- A smaller number will mean less of an emphasis on recency!
     recency_factor = 0.5,
+    -- Same as `recency_factor`, but for frequency!
+    frequency_factor = 1,
   },
 }
 ```
