@@ -202,4 +202,8 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
   end,
 })
 
+vim.api.nvim_create_user_command("ArenaToggle", M.toggle, {})
+vim.api.nvim_create_user_command("ArenaOpen", M.open, {})
+vim.api.nvim_create_user_command("ArenaClose", M.close, {})
+
 return M

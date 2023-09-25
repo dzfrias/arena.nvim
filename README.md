@@ -71,7 +71,7 @@ all the configuration options along with their default values.
 
 ### Toggle
 
-Toggles the arena window.
+Toggles the arena window. `ArenaClose` from vimscript.
 
 ```lua
 require("arena").toggle()
@@ -79,7 +79,7 @@ require("arena").toggle()
 
 ### Open
 
-Opens the arena window.
+Opens the arena window. `ArenaOpen` from vimscript.
 
 ```lua
 require("arena").open()
@@ -87,7 +87,7 @@ require("arena").open()
 
 ### Close
 
-Closes the arena window, if it exists.
+Closes the arena window, if it exists. `ArenaClose` from vimscript.
 
 ```lua
 require("arena").close()
