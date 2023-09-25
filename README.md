@@ -71,7 +71,7 @@ all the configuration options along with their default values.
 
 ### Toggle
 
-Toggles the arena window. `ArenaClose` from vimscript.
+Toggles the arena window. `ArenaToggle` from vimscript.
 
 ```lua
 require("arena").toggle()
