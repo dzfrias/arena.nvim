@@ -14,7 +14,33 @@ then the arena the perfect solution!
 
 ## Getting Started
 
-TODO
+You can use your favorite package manager to get `arena.nvim` on your system.
+
+For example, with [lazy](https://github.com/folke/lazy.nvim):
+
+```lua
+{
+  "dzfrias/arena.nvim",
+  event = "BufWinEnter",
+  -- Calls `.setup()` automatically
+  config = true,
+}
+```
+
+Or with [packer](https://github.com/wbthomason/packer.nvim):
+
+```lua
+use {
+  "dzfrias/arena.nvim",
+  config = function()
+    require("arena").setup()
+  end
+}
+```
+
+To see if everything's working, restart neovim and run `:ArenaToggle`! From here,
+you can see the [config reference](#configuration) or the [API reference](#api)
+for the full breadth of options!
 
 ## Configuration
 
