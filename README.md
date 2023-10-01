@@ -1,7 +1,7 @@
 # arena.nvim
 
 `arena.nvim` is a **frecency**-based buffer switcher that allows you to hop between
-files *as fast as you can think*! If you're tired of:
+files _as fast as you can think_! If you're tired of:
 
 - Using a fuzzy-finder every time you want to switch to a file
 - Persistent marks that you have to maintain yourself
@@ -9,7 +9,7 @@ files *as fast as you can think*! If you're tired of:
 
 then the arena the perfect solution!
 
-<img width="987" alt="The arena window" src="https://github.com/dzfrias/arena.nvim/assets/96022404/625c0b11-81c5-4336-bc82-84b2247ebc2b">
+<img width="987" alt="The arena window" src="./doc/window.png">
 <sub>The arena window. You can jump to your most frecent files!</sub>
 
 ## Getting Started
