@@ -1,6 +1,6 @@
 # arena.nvim
 
-`arena.nvim` is a **frecency**-based buffer switcher that allows you to hop between
+`arena.nvim` is a **frequency**-based buffer switcher that allows you to hop between
 files _as fast as you can think_! If you're tired of:
 
 - Using a fuzzy-finder every time you want to switch to a file
@@ -10,7 +10,7 @@ files _as fast as you can think_! If you're tired of:
 then the arena the perfect solution!
 
 <img width="987" alt="The arena window" src="./doc/window.png">
-<sub>The arena window. You can jump to your most frecent files!</sub>
+<sub>The arena window. You can jump to your most frequent files!</sub>
 
 ## Getting Started
 
@@ -80,7 +80,7 @@ all the configuration options along with their default values.
       -- end
   },
 
-  -- Config for frecency algorithm.
+  -- Config for frequency algorithm.
   algorithm = {
     -- Multiplies the recency by a factor. Must be greater than zero.
     -- A smaller number will mean less of an emphasis on recency!

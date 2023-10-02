@@ -1,4 +1,4 @@
-local frecency = require("arena.frecency")
+local frequency = require("arena.frequency")
 local util = require("arena.util")
 
 local M = {}
@@ -91,12 +91,12 @@ local config = {
     ["q"] = M.close,
   },
 
-  --- Config for frecency algorithm.
-  algorithm = frecency.get_config(),
+  --- Config for frequency algorithm.
+  algorithm = frequency.get_config(),
 }
 
 function M.open()
-  local items = frecency.top_items(function(_, data)
+  local items = frequency.top_items(function(_, data)
     if config.ignore_current and data.buf == vim.api.nvim_get_current_buf() then
       return false
     end
@@ -189,7 +189,7 @@ end
 function M.setup(opts)
   opts = opts or {}
   config = vim.tbl_deep_extend("force", config, opts)
-  frecency.tune(config.algorithm)
+  frequency.tune(config.algorithm)
 end
 
 local group = vim.api.nvim_create_augroup("arena", { clear = true })
@@ -197,7 +197,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
   group = group,
   callback = function(data)
     if data.file ~= "" and vim.o.buftype == "" then
-      frecency.update_item(data.file, { buf = data.buf })
+      frequency.update_item(data.file, { buf = data.buf })
     end
   end,
 })

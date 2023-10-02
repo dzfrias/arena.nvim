@@ -10,13 +10,13 @@ local config = {
   frequency_factor = 1,
 }
 
---- Get the current frecency config.
+--- Get the current frequency config.
 --- @return table
 function M.get_config()
   return config
 end
 
---- Configure the frecency algorithm.
+--- Configure the frequency algorithm.
 --- @param opts table
 function M.tune(opts)
   opts = opts or {}
@@ -33,7 +33,7 @@ function M.tune(opts)
   end
 end
 
---- Update an item for the frecency algorithm.
+--- Update an item for the frequency algorithm.
 --- @param item string
 --- @param meta table
 function M.update_item(item, meta)
@@ -50,10 +50,10 @@ function M.update_item(item, meta)
   end
 end
 
---- Get the frecency score of an item.
+--- Get the frequency score of an item.
 --- @param item string
 --- @return number
-function M.calc_frecency(item)
+function M.calc_frequency(item)
   local data = usages[item]
   if data == nil then
     -- Not been used before, return 0
@@ -64,40 +64,40 @@ function M.calc_frecency(item)
   local frequency_factor = data.count * config.frequency_factor
   recency_factor = recency_factor * config.recency_factor
 
-  local frecency = recency_factor * frequency_factor
+  local frequency = recency_factor * frequency_factor
 
-  return frecency
+  return frequency
 end
 
---- Get the most frecent items, in descending order.
+--- Get the most frequent items, in descending order.
 --- @param filter (fun(name: string, data: table): boolean)?
 --- @param n number?
 --- @return table<{ name: string, score: number, meta: table }>
 function M.top_items(filter, n)
-  local frecencies = {}
+  local frequencies = {}
   local i = 1
   for name, data in pairs(usages) do
     if filter and not filter(name, data.meta) then
       goto continue
     end
-    local score = M.calc_frecency(name)
-    table.insert(frecencies, { name = name, score = score, meta = data.meta })
+    local score = M.calc_frequency(name)
+    table.insert(frequencies, { name = name, score = score, meta = data.meta })
     i = i + 1
     ::continue::
   end
-  table.sort(frecencies, function(a, b)
+  table.sort(frequencies, function(a, b)
     return a.score > b.score
   end)
 
   if n then
     local new = {}
     for j = 1, n do
-      new[j] = frecencies[j]
+      new[j] = frequencies[j]
     end
     return new
   end
 
-  return frecencies
+  return frequencies
 end
 
 return M
