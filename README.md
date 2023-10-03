@@ -66,6 +66,9 @@ all the configuration options along with their default values.
     -- Example. Uncomment to add to your config!
     -- ["relativenumber"] = false,
   },
+  -- Filter out buffers per the project they belong to.
+  per_project = false,
+
 
   window = {
     width = 60,

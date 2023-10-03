@@ -47,6 +47,9 @@ local config = {
   --- Options to apply to the arena buffer
   --- @type table<string, any>
   buf_opts = {},
+  --- Filter buffers by project.
+  --- @type boolean
+  per_project = false,
 
   window = {
     width = 60,
@@ -96,9 +99,28 @@ local config = {
 }
 
 function M.open()
-  local items = frecency.top_items(function(_, data)
+  -- Get the most frecent buffers
+  local items = frecency.top_items(function(name, data)
     if config.ignore_current and data.buf == vim.api.nvim_get_current_buf() then
       return false
+    end
+
+    if config.per_project then
+      local current = vim.api.nvim_buf_get_name(0)
+      local root_dir
+      for dir in vim.fs.parents(current) do
+        if vim.fn.isdirectory(dir .. "/.git") == 1 then
+          root_dir = dir
+          break
+        end
+      end
+      if not root_dir then
+        return true
+      end
+      if not vim.startswith(name, root_dir) then
+        print(name, root_dir)
+        return false
+      end
     end
 
     if vim.fn.buflisted(data.buf) ~= 1 then
@@ -107,6 +129,7 @@ function M.open()
 
     return vim.api.nvim_buf_is_loaded(data.buf)
   end, config.max_items)
+
   buffers = {}
   for _, item in ipairs(items) do
     table.insert(buffers, item.meta.buf)
