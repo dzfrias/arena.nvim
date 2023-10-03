@@ -92,6 +92,7 @@ local config = {
       vim.fn.cursor(info.lnum, 0)
     end),
     ["q"] = M.close,
+    ["<esc>"] = M.close,
   },
 
   --- Config for frecency algorithm.
