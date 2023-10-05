@@ -9,6 +9,8 @@ local bufnr = nil
 local winnr = nil
 --- @type number[]?
 local buffers = nil
+--- @type table<number, string>
+local bufnames = {}
 
 --- Close the current arena window
 function M.close()
@@ -62,16 +64,19 @@ local config = {
   },
 
   --- Keybinds for the arena window.
-  --- @type table<string, (function | string)?>
+  --- @type table<string, (function | string | table)?>
   keybinds = {
-    ["<C-x>"] = M.action(function(buf, info)
-      vim.cmd({
-        cmd = "split",
-        args = { vim.fn.bufname(buf) },
-        mods = { horizontal = true },
-      })
-      vim.fn.cursor(info.lnum, 0)
-    end),
+    ["<C-x>"] = {
+      M.action(function(buf, info)
+        vim.cmd({
+          cmd = "split",
+          args = { vim.fn.bufname(buf) },
+          mods = { horizontal = true },
+        })
+        vim.fn.cursor(info.lnum, 0)
+      end),
+      {},
+    },
     ["<C-v>"] = M.action(function(buf, info)
       vim.cmd({
         cmd = "split",
@@ -91,6 +96,14 @@ local config = {
       vim.api.nvim_set_current_buf(buf)
       vim.fn.cursor(info.lnum, 0)
     end),
+    ["d"] = {
+      M.action(function(buf)
+        M.remove(buf)
+      end),
+      {
+        nowait = true,
+      },
+    },
     ["q"] = M.close,
     ["<esc>"] = M.close,
   },
@@ -119,7 +132,6 @@ function M.open()
         return true
       end
       if not vim.startswith(name, root_dir) then
-        print(name, root_dir)
         return false
       end
     end
@@ -141,6 +153,15 @@ function M.open()
   end
   -- Truncate paths, prettier output
   util.truncate_paths(contents, { always_context = config.always_context })
+
+  if winnr ~= nil then
+    vim.api.nvim_buf_set_option(bufnr, "readonly", false)
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+    vim.api.nvim_buf_set_option(bufnr, "readonly", true)
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+    return
+  end
 
   bufnr = vim.api.nvim_create_buf(false, false)
   winnr = vim.api.nvim_open_win(bufnr, false, {
@@ -191,7 +212,12 @@ function M.open()
     if not key then
       goto continue
     end
-    vim.keymap.set("n", key, fn, { buffer = bufnr })
+    if type(fn) == "table" then
+      local merged = vim.tbl_extend("force", fn[2], { buffer = bufnr })
+      vim.keymap.set("n", key, fn[1], merged)
+    else
+      vim.keymap.set("n", key, fn, { buffer = bufnr })
+    end
     ::continue::
   end
 
@@ -208,7 +234,17 @@ function M.toggle()
   M.open()
 end
 
---- Set up the config
+--- Remove an entry from the window.
+--- @param buf number The buffer id of the buffer to remove.
+function M.remove(buf)
+  frecency.remove_item(bufnames[buf])
+  vim.api.nvim_buf_delete(buf, {})
+  if winnr ~= nil then
+    M.open()
+  end
+end
+
+--- Set up the config.
 --- @param opts table?
 function M.setup(opts)
   opts = opts or {}
@@ -222,6 +258,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
   callback = function(data)
     if data.file ~= "" and vim.o.buftype == "" then
       frecency.update_item(data.file, { buf = data.buf })
+      bufnames[data.buf] = data.file
     end
   end,
 })

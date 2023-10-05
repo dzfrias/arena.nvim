@@ -46,6 +46,21 @@ To see if everything's working, restart neovim and run `:ArenaToggle`! From here
 you can see the [config reference](#configuration) or the [API reference](#api)
 for the full breadth of options!
 
+## Default Keybinds
+
+`arena.nvim` comes with some default keybinds for buffer management!
+
+| Key     | Description                        |
+| ------- | ---------------------------------- |
+| `<CR>`  | Open to file                       |
+| `d`     | Delete the buffer under the cursor |
+| `<C-v>` | Open file (vsplit)                 |
+| `<C-x>` | Open file (hsplit)                 |
+| `<C-t>` | Open file (tab)                    |
+
+If you'd like to unset any of these, set the value to `nil` in the keybinds
+section of the [config](#configuration).
+
 ## Configuration
 
 `arena.nvim` has plenty of configuration options to suit your needs! Below are
@@ -145,6 +160,16 @@ require("arena").action(function(bufnr, info)
   })
   vim.fn.cursor(info.lnum, 0)
 end)
+```
+
+### Remove
+
+Remove a buffer from the arena window, by buffer number, useful in
+[actions](#action). The buffer will also be deleted in vim (like `:bdelete`).
+
+```lua
+-- Remove the current buffer from the arena window
+require("arena").remove(0)
 ```
 
 ## License

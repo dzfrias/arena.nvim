@@ -100,4 +100,10 @@ function M.top_items(filter, n)
   return frecencies
 end
 
+--- Remove an item from the frecency store.
+--- @param item string
+function M.remove_item(item)
+  usages[item] = nil
+end
+
 return M
