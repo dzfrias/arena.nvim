@@ -237,6 +237,11 @@ end
 --- Remove an entry from the window.
 --- @param buf number The buffer id of the buffer to remove.
 function M.remove(buf)
+  if not bufnames[buf] then
+    error("cannot remove buffer that hasn't been opened yet")
+    return
+  end
+
   frecency.remove_item(bufnames[buf])
   vim.api.nvim_buf_delete(buf, {})
   if winnr ~= nil then

@@ -168,8 +168,8 @@ Remove a buffer from the arena window, by buffer number, useful in
 [actions](#action). The buffer will also be deleted in vim (like `:bdelete`).
 
 ```lua
--- Remove the current buffer from the arena window
-require("arena").remove(0)
+-- Remove the 42nd buffer from the arena window
+require("arena").remove(42)
 ```
 
 ## License
