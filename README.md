@@ -54,6 +54,7 @@ for the full breadth of options!
 | ------- | ---------------------------------- |
 | `<CR>`  | Open to file                       |
 | `d`     | Delete the buffer under the cursor |
+| `p`     | Pin the buffer under the cursor    |
 | `<C-v>` | Open file (vsplit)                 |
 | `<C-x>` | Open file (hsplit)                 |
 | `<C-t>` | Open file (tab)                    |
@@ -170,6 +171,23 @@ Remove a buffer from the arena window, by buffer number, useful in
 ```lua
 -- Remove the 42nd buffer from the arena window
 require("arena").remove(42)
+```
+
+### Pin
+
+Pin a buffer to the top of the arena window. Useful in [actions](#action).
+
+```lua
+-- Pin the 43rd buffer
+require("arena").pin(43)
+```
+
+### Refresh
+
+Refesh the arena window. Useful in [actions](#action)!
+
+```lua
+require("arena").refresh()
 ```
 
 ## License

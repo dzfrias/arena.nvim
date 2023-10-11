@@ -11,6 +11,7 @@ local winnr = nil
 local buffers = nil
 --- @type table<number, string>
 local bufnames = {}
+local pinned = {}
 
 --- Close the current arena window
 function M.close()
@@ -104,6 +105,9 @@ local config = {
         nowait = true,
       },
     },
+    ["p"] = M.action(function(buf)
+      M.pin(buf)
+    end),
     ["q"] = M.close,
     ["<esc>"] = M.close,
   },
@@ -144,15 +148,39 @@ function M.open()
   end, config.max_items)
 
   buffers = {}
-  for _, item in ipairs(items) do
-    table.insert(buffers, item.meta.buf)
-  end
   local contents = {}
+  for _, buf in ipairs(pinned) do
+    local name = vim.fn.getbufinfo(buf)[1].name
+    table.insert(buffers, buf)
+    table.insert(contents, name)
+  end
   for _, item in ipairs(items) do
+    if vim.tbl_contains(pinned, item.meta.buf) then
+      goto continue
+    end
+    table.insert(buffers, item.meta.buf)
     table.insert(contents, item.name)
+    ::continue::
+  end
+  if #contents > config.max_items then
+    for _ = 0, #contents - config.max_items do
+      table.remove(contents)
+    end
+  end
+  if #buffers > config.max_items then
+    for _ = 0, #buffers - config.max_items do
+      table.remove(buffers)
+    end
   end
   -- Truncate paths, prettier output
   util.truncate_paths(contents, { always_context = config.always_context })
+  if #pinned > 0 then
+    for i, item in ipairs(contents) do
+      if pinned[i] then
+        contents[i] = "•" .. item
+      end
+    end
+  end
 
   if winnr ~= nil then
     vim.api.nvim_buf_set_option(bufnr, "readonly", false)
@@ -175,7 +203,7 @@ function M.open()
     border = config.window.border,
   })
 
-  vim.api.nvim_buf_set_lines(bufnr, 0, #contents, false, contents)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
 
   -- Buffer options
   vim.api.nvim_buf_set_option(bufnr, "filetype", "arena")
@@ -244,9 +272,33 @@ function M.remove(buf)
 
   frecency.remove_item(bufnames[buf])
   vim.api.nvim_buf_delete(buf, {})
+  M.refresh()
+end
+
+function M.refresh()
   if winnr ~= nil then
     M.open()
   end
+end
+
+--- Toggle a pin on an entry in the window.
+--- @param buf number The buffer id of the buffer to pin.
+function M.pin(buf)
+  if not bufnames[buf] then
+    error("cannot pin buffer that hasn't been opened yet")
+    return
+  end
+
+  for i, pinned_buf in ipairs(pinned) do
+    if pinned_buf == buf then
+      table.remove(pinned, i)
+      M.refresh()
+      return
+    end
+  end
+
+  table.insert(pinned, buf)
+  M.refresh()
 end
 
 --- Set up the config.
