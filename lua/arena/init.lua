@@ -218,7 +218,7 @@ function M.open()
 
   -- Window options
   for option, value in pairs(config.window.opts) do
-    vim.api.nvim_win_set_option(bufnr, option, value)
+    vim.api.nvim_win_set_option(winnr, option, value)
   end
 
   -- Autocommands
