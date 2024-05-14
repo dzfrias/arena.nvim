@@ -123,6 +123,12 @@ function M.open()
       return false
     end
 
+    for _, buffer in pairs(bufnames) do
+      if name == buffer then
+        return true
+      end
+    end
+
     if config.per_project then
       local current = vim.api.nvim_buf_get_name(0)
       local root_dir
@@ -310,6 +316,19 @@ function M.setup(opts)
 end
 
 local group = vim.api.nvim_create_augroup("arena", { clear = true })
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = group,
+  once = true,
+  callback = function(data)
+  for _, buf in pairs(vim.api.nvim_list_bufs()) do
+    local bufname = vim.api.nvim_buf_get_name(buf)
+    if bufname ~= "" and vim.o.buftype == "" then
+      frecency.update_item(bufname, { buf = buf })
+      bufnames[buf] = bufname
+    end
+  end
+  end,
+})
 vim.api.nvim_create_autocmd("BufWinEnter", {
   group = group,
   callback = function(data)
