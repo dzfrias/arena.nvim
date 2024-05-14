@@ -125,7 +125,7 @@ function M.open()
 
     for _, buffer in pairs(bufnames) do
       if name == buffer then
-        return true
+        return vim.fn.buflisted(buffer) == 1
       end
     end
 
