@@ -42,9 +42,9 @@ use {
 }
 ```
 
-To see if everything's working, restart neovim and run `:ArenaToggle`! From here,
-you can see the [config reference](#configuration) or the [API reference](#api)
-for the full breadth of options!
+To see if everything's working, restart neovim and run `:ArenaToggle`! From
+here, you can see the [config reference](#configuration) or the
+[API reference](#api) for the full breadth of options!
 
 ## Default Keybinds
 
@@ -54,6 +54,7 @@ for the full breadth of options!
 | ------- | ---------------------------------- |
 | `<CR>`  | Open to file                       |
 | `d`     | Delete the buffer under the cursor |
+| `D`     | Delete all unpinned buffers        |
 | `p`     | Pin the buffer under the cursor    |
 | `<C-v>` | Open file (vsplit)                 |
 | `<C-x>` | Open file (hsplit)                 |
@@ -148,8 +149,8 @@ Useful in the `keybinds` key of [the config](#configuration). Wraps a function
 that should do something with the currently selected file in the arena window.
 
 The function is passed a number, which represents the buffer number of the
-currently selected file. It can also accept a second argument, which is
-the output of `getbufinfo()`.
+currently selected file. It can also accept a second argument, which is the
+output of `getbufinfo()`.
 
 ```lua
 -- Equivalent to the <C-v> keybind in the arena window
@@ -162,6 +163,20 @@ require("arena").action(function(bufnr, info)
   vim.fn.cursor(info.lnum, 0)
 end)
 ```
+
+There is a variant of `action`: `action_all`. This is the same as `action`,
+except it will apply to each buffer in the window.
+
+```lua
+-- Close all buffers in the window
+require("arena").action_all(function(bufnr)
+  require("arena").remove(bufnr)
+end)
+```
+
+Most keybinds are implemented as actions in the source code, so
+[check those out](https://github.com/dzfrias/arena.nvim/blob/f9268d7f0b30c93e592a87a24257956f1bb868ac/lua/arena/init.lua#L69)
+if you want real examples!
 
 ### Remove
 
@@ -181,6 +196,8 @@ Pin a buffer to the top of the arena window. Useful in [actions](#action).
 -- Pin the 43rd buffer
 require("arena").pin(43)
 ```
+
+You may check if a buffer is pinned using the `is_pinned(buf)` function.
 
 ### Refresh
 
