@@ -11,6 +11,7 @@ local winnr = nil
 local buffers = nil
 --- @type table<number, string>
 local bufnames = {}
+--- @type number[]
 local pinned = {}
 
 --- Close the current arena window
@@ -21,10 +22,10 @@ function M.close()
   buffers = nil
 end
 
---- Wrap a function that switches to a buffer in the arena window.
+--- Wrap a function that does something to the buffer the cursor is over.
 ---
---- The function takes in a buffer number, which represents the current buffer
---- that will be switched to. It may also return `false`, to cancel the opening.
+--- The function should take in a buffer number, which represents the current
+--- buffer that the cursor is over.
 ---
 --- @param fn fun(buf: number, info: table?)
 function M.action(fn)
@@ -35,6 +36,21 @@ function M.action(fn)
     local idx = vim.fn.line(".")
     local info = vim.fn.getbufinfo(buffers[idx])[1]
     fn(buffers[idx], info)
+  end
+end
+
+--- Wrap a function that is applied to each buffer in the window.
+---
+--- The function should take in a buffer number, which represents the current
+--- buffer that the cursor is over.
+---
+--- @param fn fun(buf: number, info: table?)
+function M.action_all(fn)
+  return function()
+    for _, buf in ipairs(buffers or {}) do
+      local info = vim.fn.getbufinfo(buf)[1]
+      fn(buf, info)
+    end
   end
 end
 
@@ -105,6 +121,12 @@ local config = {
         nowait = true,
       },
     },
+    ["D"] = M.action_all(function(buf)
+      if M.is_pinned(buf) then
+        return
+      end
+      M.remove(buf)
+    end),
     ["p"] = M.action(function(buf)
       M.pin(buf)
     end),
@@ -285,6 +307,12 @@ function M.refresh()
   if winnr ~= nil then
     M.open()
   end
+end
+
+--- Check if a buffer has been pinned.
+--- @param buf number The buffer id of the buffer to check
+function M.is_pinned(buf)
+  return vim.tbl_contains(pinned, buf)
 end
 
 --- Toggle a pin on an entry in the window.
