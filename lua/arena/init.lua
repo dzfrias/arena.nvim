@@ -355,13 +355,7 @@ vim.api.nvim_create_user_command("ArenaClose", M.close, {})
 vim.api.nvim_create_autocmd("SessionLoadPost", {
   group = group,
   callback = function()
-    local session_buffers = {}
-    for buffer = 1, vim.fn.bufnr("$") do
-      if vim.fn.buflisted(buffer) == 1 then
-        table.insert(session_buffers, buffer)
-      end
-    end
-    for _, buffer in pairs(session_buffers) do
+    for _, buffer in pairs(vim.api.nvim_list_bufs()) do
       local name = vim.api.nvim_buf_get_name(buffer)
       frecency.update_item(name, { buf = buffer, session = true })
       bufnames[buffer] = name
