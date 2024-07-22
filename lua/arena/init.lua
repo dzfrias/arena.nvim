@@ -166,7 +166,7 @@ function M.open()
       return false
     end
 
-    return vim.api.nvim_buf_is_loaded(data.buf)
+    return data.session or vim.api.nvim_buf_is_loaded(data.buf)
   end, config.max_items)
 
   buffers = {}
@@ -351,5 +351,22 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 vim.api.nvim_create_user_command("ArenaToggle", M.toggle, {})
 vim.api.nvim_create_user_command("ArenaOpen", M.open, {})
 vim.api.nvim_create_user_command("ArenaClose", M.close, {})
+
+vim.api.nvim_create_autocmd("SessionLoadPost", {
+  group = group,
+  callback = function()
+    local session_buffers = {}
+    for buffer = 1, vim.fn.bufnr("$") do
+      if vim.fn.buflisted(buffer) == 1 then
+        table.insert(session_buffers, buffer)
+      end
+    end
+    for _, buffer in pairs(session_buffers) do
+      local name = vim.api.nvim_buf_get_name(buffer)
+      frecency.update_item(name, { buf = buffer, session = true })
+      bufnames[buffer] = name
+    end
+  end,
+})
 
 return M
