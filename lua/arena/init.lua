@@ -6,6 +6,8 @@ local M = {}
 --- @type number?
 local bufnr = nil
 --- @type number?
+local parent_bufnr = nil
+--- @type number?
 local winnr = nil
 --- @type number[]?
 local buffers = nil
@@ -63,6 +65,9 @@ local config = {
   always_context = { "mod.rs", "init.lua" },
   --- When activated, ignores the current buffer when listing in the arena.
   ignore_current = false,
+  --- When set to a string, will highlight the current buffer.
+  --- @type string | boolean
+  highlight_current = false,
   --- Options to apply to the arena buffer
   --- @type table<string, any>
   buf_opts = {},
@@ -71,7 +76,7 @@ local config = {
   per_project = false,
   --- Add devicons (from nvim-web-devicons, if installed) to buffers
   --- @type boolean
-  devicons = true,
+  devicons = false,
 
   window = {
     width = 60,
@@ -144,7 +149,11 @@ local config = {
 function M.open()
   -- Get the most frecent buffers
   local items = frecency.top_items(function(name, data)
-    if config.ignore_current and data.buf == vim.api.nvim_get_current_buf() then
+    local parent = vim.api.nvim_get_current_buf()
+    if winnr ~= nil then
+      parent = parent_bufnr
+    end
+    if config.ignore_current and data.buf == parent then
       return false
     end
 
@@ -199,34 +208,6 @@ function M.open()
   end
   -- Truncate paths, prettier output
   util.truncate_paths(contents, { always_context = config.always_context })
-  if #pinned > 0 then
-    for i, item in ipairs(contents) do
-      if pinned[i] then
-        contents[i] = "•" .. item
-      end
-    end
-  end
-
-  if winnr ~= nil then
-    vim.api.nvim_buf_set_option(bufnr, "readonly", false)
-    vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
-    vim.api.nvim_buf_set_option(bufnr, "readonly", true)
-    vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
-    return
-  end
-
-  bufnr = vim.api.nvim_create_buf(false, false)
-  winnr = vim.api.nvim_open_win(bufnr, false, {
-    relative = "editor",
-    row = ((vim.o.lines - config.window.height) / 2) - 1,
-    col = (vim.o.columns - config.window.width) / 2,
-    width = config.window.width,
-    height = config.window.height,
-    title = "Arena",
-    title_pos = "center",
-    border = config.window.border,
-  })
 
   local devicons_are_installed, devicons = pcall(require, "nvim-web-devicons")
   local devicon_highlights = {}
@@ -254,9 +235,22 @@ function M.open()
     end
   end
 
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+  if #pinned > 0 then
+    for i, item in ipairs(contents) do
+      if pinned[i] then
+        if config.devicons then
+          contents[i] = item .. " ●"
+        else
+          contents[i] = "● " .. item
+        end
+      end
+    end
+  end
 
-  if config.devicons and devicons_are_installed then
+  local function highlight_devicons()
+    if not (config.devicons and devicons_are_installed) then
+      return
+    end
     for i, highlight in ipairs(devicon_highlights) do
       vim.api.nvim_buf_add_highlight(
         bufnr,
@@ -266,6 +260,53 @@ function M.open()
         0,
         #highlight.icon
       )
+    end
+  end
+
+  if winnr ~= nil then
+    vim.api.nvim_buf_set_option(bufnr, "readonly", false)
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+    vim.api.nvim_buf_set_option(bufnr, "readonly", true)
+    vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+    highlight_devicons()
+    return
+  end
+
+  parent_bufnr = vim.api.nvim_get_current_buf()
+  bufnr = vim.api.nvim_create_buf(false, false)
+  winnr = vim.api.nvim_open_win(bufnr, false, {
+    relative = "editor",
+    row = ((vim.o.lines - config.window.height) / 2) - 1,
+    col = (vim.o.columns - config.window.width) / 2,
+    width = config.window.width,
+    height = config.window.height,
+    title = "Arena",
+    title_pos = "center",
+    border = config.window.border,
+  })
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+
+  highlight_devicons()
+
+  if config.highlight_current then
+    if type(config.highlight_current) == "boolean" then
+      config.highlight_current = "comment"
+    end
+    for i, item in ipairs(contents) do
+      if parent_bufnr ~= buffers[i] then
+        goto continue
+      end
+      vim.api.nvim_buf_add_highlight(
+        bufnr,
+        vim.api.nvim_create_namespace("arena"),
+        config.highlight_current,
+        i - 1,
+        0,
+        #item
+      )
+      ::continue::
     end
   end
 
@@ -297,6 +338,20 @@ function M.open()
     nested = true,
     once = true,
     callback = M.close,
+  })
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    buffer = bufnr,
+    callback = function()
+      if not config.devicons then
+        return
+      end
+      -- Constrain cursor
+      local cur = vim.api.nvim_win_get_cursor(0)
+      local min_col = 4
+      if cur[2] < min_col then
+        vim.api.nvim_win_set_cursor(0, { cur[1], min_col })
+      end
+    end,
   })
 
   -- Keymaps

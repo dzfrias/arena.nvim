@@ -77,6 +77,9 @@ all the configuration options along with their default values.
   always_context = { "mod.rs", "init.lua" },
   -- When set, ignores the current buffer when listing files in the window.
   ignore_current = false,
+  -- When set to a string, will highlight the current buffer with the
+  -- corresponding highlight group.
+  highlight_current = false,
   -- Options to apply to the arena buffer.
   -- Format should be `["<OPTION>"] = <VALUE>`
   buf_opts = {
