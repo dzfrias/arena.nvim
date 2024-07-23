@@ -85,6 +85,8 @@ all the configuration options along with their default values.
   },
   -- Filter out buffers per the project they belong to.
   per_project = false,
+  --- Add devicons (from nvim-web-devicons, if installed) to buffers
+  devicons = true,
 
 
   window = {
@@ -201,7 +203,7 @@ You may check if a buffer is pinned using the `is_pinned(buf)` function.
 
 ### Refresh
 
-Refesh the arena window. Useful in [actions](#action)!
+Refresh the arena window. Useful in [actions](#action)!
 
 ```lua
 require("arena").refresh()

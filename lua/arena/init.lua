@@ -69,6 +69,9 @@ local config = {
   --- Filter buffers by project.
   --- @type boolean
   per_project = false,
+  --- Add devicons (from nvim-web-devicons, if installed) to buffers
+  --- @type boolean
+  devicons = true,
 
   window = {
     width = 60,
@@ -225,7 +228,46 @@ function M.open()
     border = config.window.border,
   })
 
+  local devicons_are_installed, devicons = pcall(require, "nvim-web-devicons")
+  local devicon_highlights = {}
+  if config.devicons and devicons_are_installed then
+    local function get_file_extension(file_path)
+      return file_path:match("^.+%.(%w+)$")
+    end
+
+    for i, item in ipairs(contents) do
+      local icon = devicons.get_icon_color(
+        item,
+        get_file_extension(item),
+        { default = true }
+      )
+      local _, iconhl =
+        devicons.get_icon(item, get_file_extension(item), { default = true })
+
+      if icon then
+        devicon_highlights[i] = {
+          iconhl = iconhl,
+          icon = icon,
+        }
+        contents[i] = icon .. " " .. item
+      end
+    end
+  end
+
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+
+  if config.devicons and devicons_are_installed then
+    for i, highlight in ipairs(devicon_highlights) do
+      vim.api.nvim_buf_add_highlight(
+        bufnr,
+        vim.api.nvim_create_namespace("arena"),
+        highlight.iconhl,
+        i - 1,
+        0,
+        #highlight.icon
+      )
+    end
+  end
 
   -- Buffer options
   vim.api.nvim_buf_set_option(bufnr, "filetype", "arena")
