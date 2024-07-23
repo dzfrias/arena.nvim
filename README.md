@@ -89,7 +89,7 @@ all the configuration options along with their default values.
   -- Filter out buffers per the project they belong to.
   per_project = false,
   --- Add devicons (from nvim-web-devicons, if installed) to buffers
-  devicons = true,
+  devicons = false,
 
 
   window = {
