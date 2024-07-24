@@ -49,4 +49,30 @@ function M.truncate_paths(paths, opts)
   end
 end
 
+--- Read a file to a string
+--- @param path string
+--- @return string?
+function M.read_file(path)
+  local file = io.open(path, "rb")
+  if not file then
+    return nil
+  end
+  local content = file:read("*a")
+  file:close()
+  return content
+end
+
+--- Write a string to a file
+--- @param filepath string
+--- @param contents string
+function M.write_file(filepath, contents)
+  local file = io.open(filepath, "w")
+  if not file then
+    error("could not open file for writing")
+    return
+  end
+  file:write(contents)
+  file:close()
+end
+
 return M

@@ -106,4 +106,16 @@ function M.remove_item(item)
   usages[item] = nil
 end
 
+--- Get the raw buffer usage data
+--- @return table
+function M.raw_usages()
+  return usages
+end
+
+--- Get the raw buffer usage data
+--- @param data table
+function M.set_raw_usages(data)
+  usages = data
+end
+
 return M

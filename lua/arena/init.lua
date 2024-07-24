@@ -449,14 +449,49 @@ vim.api.nvim_create_user_command("ArenaToggle", M.toggle, {})
 vim.api.nvim_create_user_command("ArenaOpen", M.open, {})
 vim.api.nvim_create_user_command("ArenaClose", M.close, {})
 
+--- Get the corresponding arena usages file from a filepath
+--- @param session_file string
+--- @return string
+local function arena_file(session_file)
+  local basename = vim.fs.basename(session_file)
+  local dirname = vim.fs.dirname(session_file)
+  return vim.fs.joinpath(
+    dirname,
+    basename:sub(0, #basename - 4) .. "_arena.json"
+  )
+end
+
+vim.api.nvim_create_autocmd("SessionWritePost", {
+  group = group,
+  callback = function()
+    local session_file = vim.api.nvim_get_vvar("this_session")
+    if session_file == "" then
+      return
+    end
+    local usages = vim.json.encode(frecency.raw_usages())
+    util.write_file(arena_file(session_file), usages)
+  end,
+})
+
 vim.api.nvim_create_autocmd("SessionLoadPost", {
   group = group,
   callback = function()
-    for _, buffer in pairs(vim.api.nvim_list_bufs()) do
-      local name = vim.api.nvim_buf_get_name(buffer)
-      frecency.update_item(name, { buf = buffer, session = true })
-      bufnames[buffer] = name
+    local session_file = vim.api.nvim_get_vvar("this_session")
+    local contents = util.read_file(arena_file(session_file))
+    if contents == nil then
+      return
     end
+    local json_data = vim.json.decode(contents)
+    local data = {}
+    for file, usage in pairs(json_data) do
+      local buf = vim.fn.bufnr(file)
+      if buf ~= -1 then
+        usage.meta.session = true
+        usage.meta.buf = buf
+        data[file] = usage
+      end
+    end
+    frecency.set_raw_usages(data)
   end,
 })
 
