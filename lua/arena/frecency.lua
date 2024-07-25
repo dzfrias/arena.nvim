@@ -1,7 +1,7 @@
 local M = {}
 
 --- @type table<string, { count: number, last_used: number, meta: table }>
-local usages = {}
+M.usages = {}
 -- Default config values
 local config = {
   --- Multiply the recency by a factor. Must be greater than zero.
@@ -39,12 +39,12 @@ end
 function M.update_item(item, meta)
   meta = meta or {}
   local current_time = os.time()
-  if usages[item] == nil then
+  if M.usages[item] == nil then
     -- If the item is used for the first time, initialize its data
-    usages[item] = { count = 1, last_used = current_time, meta = meta }
+    M.usages[item] = { count = 1, last_used = current_time, meta = meta }
   else
     -- If the item has been used before, update its data
-    local data = usages[item]
+    local data = M.usages[item]
     data.count = data.count + 1
     data.last_used = current_time
   end
@@ -54,7 +54,7 @@ end
 --- @param item string
 --- @return number
 function M.calc_frecency(item)
-  local data = usages[item]
+  local data = M.usages[item]
   if data == nil then
     -- Not been used before, return 0
     return 0
@@ -76,7 +76,7 @@ end
 function M.top_items(filter, n)
   local frecencies = {}
   local i = 1
-  for name, data in pairs(usages) do
+  for name, data in pairs(M.usages) do
     if filter and not filter(name, data.meta) then
       goto continue
     end
@@ -103,19 +103,7 @@ end
 --- Remove an item from the frecency store.
 --- @param item string
 function M.remove_item(item)
-  usages[item] = nil
-end
-
---- Get the raw buffer usage data
---- @return table
-function M.raw_usages()
-  return usages
-end
-
---- Get the raw buffer usage data
---- @param data table
-function M.set_raw_usages(data)
-  usages = data
+  M.usages[item] = nil
 end
 
 return M

@@ -461,16 +461,24 @@ local function arena_file(session_file)
   )
 end
 
+local function save_session()
+  local session_file = vim.api.nvim_get_vvar("this_session")
+  if session_file == "" then
+    return
+  end
+  local usages = vim.json.encode(frecency.usages)
+  util.write_file(arena_file(session_file), usages)
+end
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "PersistenceSavePost",
+  group = group,
+  callback = save_session,
+})
+
 vim.api.nvim_create_autocmd("SessionWritePost", {
   group = group,
-  callback = function()
-    local session_file = vim.api.nvim_get_vvar("this_session")
-    if session_file == "" then
-      return
-    end
-    local usages = vim.json.encode(frecency.raw_usages())
-    util.write_file(arena_file(session_file), usages)
-  end,
+  callback = save_session,
 })
 
 vim.api.nvim_create_autocmd("SessionLoadPost", {
@@ -491,7 +499,7 @@ vim.api.nvim_create_autocmd("SessionLoadPost", {
         data[file] = usage
       end
     end
-    frecency.set_raw_usages(data)
+    frecency.usages = data
   end,
 })
 
