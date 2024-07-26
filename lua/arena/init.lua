@@ -119,7 +119,7 @@ function M.open()
       return false
     end
 
-    return data.session or vim.api.nvim_buf_is_loaded(data.buf)
+    return true
   end, config.max_items)
 
   local buffers = {}
@@ -156,9 +156,9 @@ function M.remove(bufnr)
     error("cannot remove buffer that isn't in the arena window")
     return
   end
-  local name = vim.fn.bufname(bufnr)
+  local name = vim.api.nvim_buf_get_name(bufnr)
   frecency.remove_item(name)
-  vim.api.nvim_buf_delete(bufnr, { unload = true })
+  vim.api.nvim_buf_delete(bufnr, {})
   M.refresh()
 end
 
