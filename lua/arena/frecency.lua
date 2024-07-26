@@ -1,41 +1,35 @@
 local M = {}
 
---- @type table<string, { count: number, last_used: number, meta: table }>
+---@type table<string, { count: number, last_used: number, meta: table }>
 M.usages = {}
 -- Default config values
-local config = {
-  --- Multiply the recency by a factor. Must be greater than zero.
+M.config = {
+  ---Multiply the recency by a factor. Must be greater than zero.
   recency_factor = 0.5,
-  --- Multiply the frequency by a factor. Must be greater than zero.
+  ---Multiply the frequency by a factor. Must be greater than zero.
   frequency_factor = 1,
 }
 
---- Get the current frecency config.
---- @return table
-function M.get_config()
-  return config
-end
-
---- Configure the frecency algorithm.
---- @param opts table
+---Configure the frecency algorithm.
+---@param opts table
 function M.tune(opts)
   opts = opts or {}
-  config = vim.tbl_deep_extend("force", config, opts)
+  M.config = vim.tbl_deep_extend("force", M.config, opts)
 
-  if config.recency_factor < 0 then
-    config.recency_factor = 0
+  if M.config.recency_factor < 0 then
+    M.config.recency_factor = 0
     error("recency_factor cannot be less than 0!")
   end
 
-  if config.frequency_factor < 0 then
-    config.frequency_factor = 0
+  if M.config.frequency_factor < 0 then
+    M.config.frequency_factor = 0
     error("frequency_factor cannot be less than 0!")
   end
 end
 
---- Update an item for the frecency algorithm.
---- @param item string
---- @param meta table
+---Update an item for the frecency algorithm.
+---@param item string
+---@param meta table?
 function M.update_item(item, meta)
   meta = meta or {}
   local current_time = os.time()
@@ -61,8 +55,8 @@ function M.calc_frecency(item)
   end
 
   local recency_factor = 1 / (os.time() - data.last_used + 1)
-  local frequency_factor = data.count * config.frequency_factor
-  recency_factor = recency_factor * config.recency_factor
+  local frequency_factor = data.count * M.config.frequency_factor
+  recency_factor = recency_factor * M.config.recency_factor
 
   local frecency = recency_factor * frequency_factor
 
