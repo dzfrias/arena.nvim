@@ -2,8 +2,7 @@
 
 `arena.nvim` is a [frecency](https://en.wikipedia.org/wiki/Frecency)-based
 buffer switcher that allows you to hop between files _as fast as you can think_!
-It sorts your buffers both by their recency of use, as well as their overall
-usage!
+It sorts your buffers using two metrics: frequency and recency!
 
 If you're tired of:
 
@@ -42,9 +41,7 @@ use {
 }
 ```
 
-To see if everything's working, restart neovim and run `:ArenaToggle`! From
-here, you can see the [config reference](#configuration) or the
-[API reference](#api) for the full breadth of options!
+To make sure everything is working, restart Neovim and run `:ArenaToggle`!
 
 ## Default Keybinds
 
@@ -73,14 +70,12 @@ all the configuration options along with their default values.
   -- Maxiumum number of files that the arena window can contain, or `nil` for
   -- an unlimited amount
   max_items = 5,
-  -- Always show the enclosing folder for these paths
+  -- Always show the enclosing directory for these paths
   always_context = { "mod.rs", "init.lua" },
   -- When set, ignores the current buffer when listing files in the window.
   ignore_current = false,
   -- Options to apply to the arena buffer.
-  -- Format should be `["<OPTION>"] = <VALUE>`
   buf_opts = {
-    -- Example. Uncomment to add to your config!
     -- ["relativenumber"] = false,
   },
   -- Filter out buffers per the project they belong to.
@@ -100,7 +95,6 @@ all the configuration options along with their default values.
 
   -- Keybinds for the arena window.
   keybinds = {
-      -- Example. Uncomment to add to your config!
       -- ["e"] = function()
       --   vim.cmd("echo \"Hello from the arena!\"")
       -- end
@@ -148,45 +142,31 @@ Closes the arena window, if it exists. `ArenaClose` from vimscript.
 require("arena").close()
 ```
 
-### Action
+### Keybinds
 
-Useful in the `keybinds` key of [the config](#configuration). Wraps a function
-that should do something with the currently selected file in the arena window.
-
-The function is passed a number, which represents the buffer number of the
-currently selected file. It can also accept a second argument, which is the
-output of `getbufinfo()`.
+In the `keybinds` section of the config, the set functions take in the current
+arena window as an argument, which
+[has its own API](https://github.com/dzfrias/arena.nvim/blob/main/lua/arena/window.lua):
 
 ```lua
--- Equivalent to the <C-v> keybind in the arena window
-require("arena").action(function(bufnr, info)
-  vim.cmd({
-    cmd = "split",
-    args = { vim.fn.bufname(bufnr) },
-    mods = { vertical = true },
-  })
-  vim.fn.cursor(info.lnum, 0)
-end)
+keybinds = {
+  -- An example keybind that prints the linecount of the buffer of the
+  -- current line in the window
+  ["i"] = function(win)
+    local current = win:current()
+    local info = vim.fn.getbufinfo(current.bufnr)[1]
+    print(info.linecount)
+  end,
+}
 ```
 
-There is a variant of `action`: `action_all`. This is the same as `action`,
-except it will apply to each buffer in the window.
-
-```lua
--- Close all buffers in the window
-require("arena").action_all(function(bufnr)
-  require("arena").remove(bufnr)
-end)
-```
-
-Most keybinds are implemented as actions in the source code, so
-[check those out](https://github.com/dzfrias/arena.nvim/blob/f9268d7f0b30c93e592a87a24257956f1bb868ac/lua/arena/init.lua#L69)
-if you want real examples!
+You can check out the
+[source code](https://github.com/dzfrias/arena.nvim/blob/238885cae2a5dcc839ceeb20e595534563894cbb/lua/arena/init.lua#L24)
+to see how the default arena keybinds are defined!
 
 ### Remove
 
-Remove a buffer from the arena window, by buffer number, useful in
-[actions](#action). The buffer will also be deleted in vim (like `:bdelete`).
+Remove a buffer from the arena window, by buffer number.
 
 ```lua
 -- Remove the 42nd buffer from the arena window
@@ -195,7 +175,7 @@ require("arena").remove(42)
 
 ### Pin
 
-Pin a buffer to the top of the arena window. Useful in [actions](#action).
+Pin a buffer to the top of the arena window.
 
 ```lua
 -- Pin the 43rd buffer
@@ -206,7 +186,7 @@ You may check if a buffer is pinned using the `is_pinned(buf)` function.
 
 ### Refresh
 
-Refresh the arena window. Useful in [actions](#action)!
+Refresh the arena window.
 
 ```lua
 require("arena").refresh()
