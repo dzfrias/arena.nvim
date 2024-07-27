@@ -200,6 +200,7 @@ end
 function M.setup(opts)
   opts = opts or {}
   config = vim.tbl_deep_extend("force", config, opts)
+  M.window.keymaps = vim.tbl_deep_extend("force", DEFAULT_KEYMAPS, config.keybinds)
   frecency.tune(config.algorithm)
 end
 
