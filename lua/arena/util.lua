@@ -11,11 +11,11 @@ local function ancestors(path)
   return seen
 end
 
---- Truncate paths intelligently. Given { "~/test/mod.rs", "~/test/more/mod.rs" },
---- this function will truncate the paths (in-place) to
---- { "test/mod.rs", "more/mod.rs" }.
---- @param paths string[]
---- @param opts { always_context: string[] }?
+---Truncate paths intelligently. Given { "~/test/mod.rs", "~/test/more/mod.rs" },
+---this function will truncate the paths (in-place) to
+---{ "test/mod.rs", "more/mod.rs" }.
+---@param paths string[]
+---@param opts { always_context: string[] }?
 function M.truncate_paths(paths, opts)
   opts = opts or {
     always_context = {},
@@ -47,6 +47,32 @@ function M.truncate_paths(paths, opts)
       paths[i] = ancstrs[-1]
     end
   end
+end
+
+---Read a file to a string
+---@param path string
+---@return string?
+function M.read_file(path)
+  local file = io.open(path, "rb")
+  if not file then
+    return nil
+  end
+  local content = file:read("*a")
+  file:close()
+  return content
+end
+
+---Write a string to a file
+---@param filepath string
+---@param contents string
+function M.write_file(filepath, contents)
+  local file = io.open(filepath, "w")
+  if not file then
+    error("could not open file for writing")
+    return
+  end
+  file:write(contents)
+  file:close()
 end
 
 return M
