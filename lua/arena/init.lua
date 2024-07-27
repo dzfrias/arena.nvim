@@ -6,6 +6,7 @@ local pin = require("arena.features.pin")
 local devicons = require("arena.features.devicons")
 
 local M = {}
+local bufnames = {}
 
 ---Main arena window
 M.window = Window.new()
@@ -96,6 +97,12 @@ function M.open()
     end
     if config.ignore_current and data.buf == parent then
       return false
+    end
+
+    for _, buffer in pairs(bufnames) do
+      if name == buffer then
+        return vim.fn.buflisted(buffer) == 1
+      end
     end
 
     if config.per_project then
@@ -197,6 +204,19 @@ function M.setup(opts)
 end
 
 local group = vim.api.nvim_create_augroup("arena", { clear = true })
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = group,
+  once = true,
+  callback = function(data)
+  for _, buf in pairs(vim.api.nvim_list_bufs()) do
+    local bufname = vim.api.nvim_buf_get_name(buf)
+    if bufname ~= "" and vim.o.buftype == "" then
+      frecency.update_item(bufname, { buf = buf })
+      bufnames[buf] = bufname
+      end
+    end
+  end,
+})
 vim.api.nvim_create_autocmd("BufWinEnter", {
   group = group,
   callback = function(data)
