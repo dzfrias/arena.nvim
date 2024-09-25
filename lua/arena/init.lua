@@ -124,13 +124,13 @@ function M.open()
 
   local buffers = {}
   for _, buf in ipairs(pin.pinned) do
-    table.insert(buffers, buf)
-  end
+      table.insert(buffers, buf)
+    end
   for _, item in ipairs(items) do
     if not pin.is_pinned(item.meta.buf) then
-      table.insert(buffers, item.meta.buf)
+        table.insert(buffers, item.meta.buf)
+      end
     end
-  end
   if #buffers > config.max_items then
     for _ = 0, #buffers - config.max_items do
       table.remove(buffers)
@@ -188,6 +188,15 @@ function M.pin(bufnr)
   M.refresh()
 end
 
+function M.init_buffers()
+  for _, buf in pairs(vim.api.nvim_list_bufs()) do
+    local bufname = vim.api.nvim_buf_get_name(buf)
+    if bufname ~= "" and vim.o.buftype == "" then
+      frecency.update_item(bufname, { buf = buf })
+    end
+  end
+end
+
 --- Set up the config.
 --- @param opts table?
 function M.setup(opts)
@@ -195,12 +204,7 @@ function M.setup(opts)
   config = vim.tbl_deep_extend("force", config, opts)
   M.window.keymaps = vim.tbl_deep_extend("force", DEFAULT_KEYMAPS, config.keybinds)
   frecency.tune(config.algorithm)
-  for _, buf in pairs(vim.api.nvim_list_bufs()) do
-    local bufname = vim.api.nvim_buf_get_name(buf)
-    if bufname ~= "" and vim.o.buftype == "" then
-      frecency.update_item(bufname, { buf = buf })
-    end
-  end
+  M.init_buffers()
 end
 
 local group = vim.api.nvim_create_augroup("arena", { clear = true })
