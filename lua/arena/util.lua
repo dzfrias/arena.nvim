@@ -3,6 +3,10 @@ local M = {}
 local function ancestors(path)
   local seen = {}
   local components = vim.fn.split(path, "/")
+  if #components <= 1 then
+    components = vim.fn.split(path, "\\\\")
+  end
+
   for i = 1, #components do
     local slice = { unpack(components, i) }
     table.insert(seen, vim.fn.join(slice, "/"))
