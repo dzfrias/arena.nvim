@@ -12,6 +12,7 @@ M.window = Window.new()
 
 local function split(win, opts)
   local current = win:current()
+  win:close()
   local info = vim.fn.getbufinfo(current.bufnr)[1]
   vim.cmd({
     cmd = "split",
@@ -30,6 +31,7 @@ local DEFAULT_KEYMAPS = {
   end,
   ["<C-t>"] = function(win)
     local current = win:current()
+    win:close()
     local info = vim.fn.getbufinfo(current.bufnr)[1]
     vim.cmd({
       cmd = "tabnew",
@@ -39,6 +41,7 @@ local DEFAULT_KEYMAPS = {
   end,
   ["<CR>"] = function(win)
     local current = win:current()
+    win:close()
     local info = vim.fn.getbufinfo(current.bufnr)[1]
     vim.api.nvim_set_current_buf(current.bufnr)
     vim.fn.cursor(info.lnum, 0)
